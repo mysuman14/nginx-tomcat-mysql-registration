@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Registration</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #e9eef5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 35px;
+            width: 350px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #aaa;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0 20px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #009639;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        #message {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>User Registration</h2>
+
+    <form id="registerForm">
+
+        <label>Username</label>
+
+        <input type="text"
+               name="username"
+               minlength="3"
+               maxlength="100"
+               required>
+
+        <label>Password</label>
+
+        <input type="password"
+               name="password"
+               minlength="12"
+               maxlength="128"
+               required>
+
+        <button type="submit">Submit</button>
+
+    </form>
+
+    <div id="message"></div>
+
+</div>
+
+<script>
+
+document.getElementById("registerForm")
+.addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const message = document.getElementById("message");
+
+    message.textContent = "Processing...";
+
+    try {
+
+        const formData = new FormData(this);
+
+        const response = await fetch("/api/register", {
+            method: "POST",
+            headers: {
+                "Content-Type":
+                "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams(formData)
+        });
+
+        const result = await response.json();
+
+        message.textContent = result.message;
+
+        if (response.ok && result.success) {
+            this.reset();
+        }
+
+    } catch (error) {
+
+        message.textContent = "Unable to connect to server.";
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>

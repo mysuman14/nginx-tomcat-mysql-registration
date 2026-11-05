@@ -1,0 +1,84 @@
+services:
+
+  mysql:
+
+    image: mysql:8.4
+
+    container_name: mysql-db
+
+    restart: unless-stopped
+
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+
+    networks:
+      - app-network
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mysqladmin ping -h localhost -uroot -p"$${MYSQL_ROOT_PASSWORD}" --silent
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+
+  tomcat:
+
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+
+    container_name: tomcat-app
+
+    restart: unless-stopped
+
+    environment:
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    networks:
+      - app-network
+
+
+  nginx:
+
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+
+    container_name: nginx-frontend
+
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+
+    depends_on:
+      - tomcat
+
+    networks:
+      - app-network
+
+
+volumes:
+
+  mysql_data:
+
+
+networks:
+
+  app-network:
+    driver: bridge
